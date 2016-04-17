@@ -1,0 +1,3 @@
+# My own packages from the noone.org APT repository
+deb http://noone.org/apt jessie main
+deb-src http://noone.org/apt jessie main

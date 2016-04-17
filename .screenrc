@@ -1,0 +1,5 @@
+autodetach on
+hardstatus alwayslastline "%{+b dr}root@%H: %n %t | %w | %l | %c:%s"
+startup_message off
+
+screen 0

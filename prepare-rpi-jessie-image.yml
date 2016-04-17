@@ -1,0 +1,41 @@
+#!/usr/bin/env ansible-playbook
+---
+# Sjoerd's Debian 8 Jessie image for Raspberry Pi 2
+- hosts: jessie-rpi
+  remote_user: root
+  gather_facts: no
+  tasks:
+    - name: "Install ansible's requirements"
+      raw: apt-get --no-install-recommends -y install python python-simplejson aptitude
+    - name: Disable overscan
+      replace: dest=/boot/firmware/config.txt regexp='^#disable_overscan=1' replace='disable_overscan=1'
+    - name: Switch mirror to ftp.ch.debian.org
+      replace: dest=/etc/apt/sources.list regexp='ftp\.debian\.org' replace='ftp.ch.debian.org'
+    - name: "Add Axels GnuPG key to apt-key"
+      apt_key: keyserver=keys.gnupg.net id=2517B724C5F6CA9953296E612FF9CD59612616B5
+    - name: Add noone.org APT repository
+      copy: src=noone.org.list dest=/etc/apt/sources.list.d/noone.org.list
+    - name: Update package lists
+      apt: update_cache=yes
+    - name: Install minimal required packages
+      apt: pkg=aptitude,git,etckeeper,screen,htop,zile,less,bash-completion state=present
+    - name: Remove unwanted packages
+      apt: pkg=dbus,tasksel,tasksel-data,gcc-4.8-base,debconf-i18n,nfacct,xdg-user-dirs,nano,vim-tiny state=absent purge=yes
+    - name: Set packages as automatically installed where missing
+      command: aptitude -y markauto '( ^lib !-dev$ !-dbg$ !-utils$ !-tools$ !-bin$ !-doc$ !-progs$ !-clients$ !-examples$ !^libnss | -data$ | -common$ | -base$ !^ncurses | ?section(libs) ) !~M ~i' apt-utils debconf debconf-utils init-system-helpers startpar systemd systemd-sysv initscripts sysv-rc sysvinit udev libc-bin tzdata debian-archive-keyring insserv gpgv whiptail adduser logrotate kmod initramfs-tools irqbalance
+    - name: Install available package updates
+      apt: upgrade=dist purge=yes
+    - name: Copy .screenrc for root
+      copy: src=.screenrc dest=/root/.screenrc
+    - name: Copy .bashrc for root
+      copy: src=.bashrc dest=/root/.bashrc
+    - name: Deploy APT and Aptitude settings
+      copy: src=99ansible-distributed-apt-settings.conf dest=/etc/apt/apt.conf.d/99ansible-distributed-apt-settings.conf
+    - name: Switch back to good old SysV init system
+      command: aptitude -y install sysvinit sysvinit-core+M systemd-sysv_ 'init&M'
+    - name: Ship a proper /etc/network/interfaces
+      copy: src=default-network-settings  dest=/etc/network/interfaces.d/default-network-settings
+    - name: Resize root partition to maximum size
+      command: printf "p\nd\n2\nn\np\n\n\n\nw\n" | fdisk /dev/mmcblk0
+    - name: Resize the file system, too
+      command: resize2fs /dev/mmcblk0p2
