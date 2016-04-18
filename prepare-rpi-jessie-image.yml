@@ -9,6 +9,8 @@
       raw: apt-get --no-install-recommends -y install python python-simplejson aptitude
     - name: Disable overscan
       replace: dest=/boot/firmware/config.txt regexp='^#disable_overscan=1' replace='disable_overscan=1'
+    - name: Set real name for root
+      command: chfn -f "Robotic Organism Optimized for Troubleshooting"
     - name: Switch mirror to ftp.ch.debian.org
       replace: dest=/etc/apt/sources.list regexp='ftp\.debian\.org' replace='ftp.ch.debian.org'
     - name: "Add Axels GnuPG key to apt-key"
@@ -19,6 +21,8 @@
       apt: update_cache=yes
     - name: Install minimal required packages
       apt: pkg=aptitude,git,etckeeper,screen,htop,zile,less,bash-completion state=present
+    - name: Tell git our real name, too
+      command: git config --global user.name "Robotic Organism Optimized for Troubleshooting"
     - name: Remove unwanted packages
       apt: pkg=dbus,tasksel,tasksel-data,gcc-4.8-base,debconf-i18n,nfacct,xdg-user-dirs,nano,vim-tiny state=absent purge=yes
     - name: Set packages as automatically installed where missing
